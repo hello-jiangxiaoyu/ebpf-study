@@ -31,5 +31,22 @@ sudo ./ecli run package.json
 sudo echo 1 > /sys/kernel/debug/tracing/tracing_on
 
 
+# eBPF常用函数
+```bash
+bpf_printk              # 内核日志打印函数
+BPF_CORE_READ           # 数据读取函数，可以从指针或结构体中读取某个字段
 
+bpf_get_current_pid_tgid  # 获取用户进程pid
+bpf_get_current_uid_gid   # 获取用户进程uid
+bpf_get_current_comm      # 获取当前任务名称，例如bash
+bpf_get_current_task      # 获取了当前进程的 task_struct 结构体
+
+bpf_probe_read_str    # 获取进程名称
+bpf_perf_event_output   # 将进程执行事件输出到 perf buffer，也就是输出到 ecli 命令行控制台
+
+bpf_map_lookup_elem  # 查找hash表里的元素
+bpf_map_update_elem  # 更新hash表里的元素
+bpf_map_delete_elem  # 删除hash表里的元素
+
+```
 
