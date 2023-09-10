@@ -29,13 +29,14 @@ struct {
 } values SEC(".maps");
 
 // kill系统调用进入
-static int probe_entry(pid_t tpid, int sig) {
-    struct event event = {};
-    __u64 pid_tgid;
-    __u32 tid;
+SEC("tracepoint/syscalls/sys_enter_kill")
+int kill_entry(struct trace_event_raw_sys_enter *ctx) {
+    pid_t        tpid     = (pid_t)ctx->args[0];
+    int          sig      = (int)ctx->args[1];
+    __u64        pid_tgid = bpf_get_current_pid_tgid();  // 获取进程id
+    __u32        tid      = (__u32)pid_tgid;
 
-    pid_tgid = bpf_get_current_pid_tgid();  // 获取进程id
-    tid = (__u32)pid_tgid;
+    struct event event = {};
     event.pid = pid_tgid >> 32;
     event.tpid = tpid;
     event.sig = sig;
@@ -45,7 +46,8 @@ static int probe_entry(pid_t tpid, int sig) {
 }
 
 // kill系统调用退出
-static int probe_exit(void *ctx, int ret) {
+SEC("tracepoint/syscalls/sys_exit_kill")
+int kill_exit(struct trace_event_raw_sys_exit *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u32 tid = (__u32)pid_tgid;
     struct event *eventp;
@@ -54,24 +56,11 @@ static int probe_exit(void *ctx, int ret) {
     if (!eventp)
         return 0;  // not found
 
-    eventp->ret = ret;
+    eventp->ret = ctx->ret;
     bpf_printk("PID %d (%s) sent signal %d ", eventp->pid, eventp->comm, eventp->sig);
-    bpf_printk("to PID %d, ret = %d", eventp->tpid, ret);
+    bpf_printk("to PID %d, ret = %d", eventp->tpid, ctx->ret);
     bpf_map_delete_elem(&values, &tid);  // 删除hash map里的元素
     return 0;
-}
-
-SEC("tracepoint/syscalls/sys_enter_kill")
-int kill_entry(struct trace_event_raw_sys_enter *ctx) {
-    pid_t tpid = (pid_t)ctx->args[0];
-    int sig = (int)ctx->args[1];
-
-    return probe_entry(tpid, sig);
-}
-
-SEC("tracepoint/syscalls/sys_exit_kill")
-int kill_exit(struct trace_event_raw_sys_exit *ctx) {
-    return probe_exit(ctx, ctx->ret);
 }
 
 
