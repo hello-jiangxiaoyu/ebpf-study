@@ -34,7 +34,7 @@ sudo echo 1 > /sys/kernel/debug/tracing/tracing_on
 # eBPF常用函数
 ```bash
 bpf_printk              # 内核日志打印函数
-BPF_CORE_READ           # 数据读取函数，可以从指针或结构体中读取某个字段
+BPF_CORE_READ           # 数据读取宏函数，用于读取结构体中的某个字段
 
 bpf_get_current_pid_tgid  # 获取用户进程pid
 bpf_get_current_uid_gid   # 获取用户进程uid

@@ -32,7 +32,7 @@ int tracepoint__syscalls__sys_enter_execve(struct trace_event_raw_sys_enter* ctx
     pid_t tgid = bpf_get_current_pid_tgid() >> 32;
     event.ppid = BPF_CORE_READ(task, real_parent, tgid);
     event.pid  = tgid;
-    event.uid  = (u32)bpf_get_current_uid_gid();
+    event.uid  = (u32)bpf_get_current_uid_gid();  // 获取进程uid
 
     char *cmd_ptr = (char *) BPF_CORE_READ(ctx, args[0]);
     bpf_probe_read_str(&event.comm, sizeof(event.comm), cmd_ptr);  // 获取进程名称
